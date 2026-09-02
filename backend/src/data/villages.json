@@ -1,0 +1,26 @@
+[
+  {
+    "id": "v001",
+    "name": "Shivpur",
+    "latitude": 25.32,
+    "longitude": 82.97,
+    "population": 8400,
+    "connectivity": "poor"
+  },
+  {
+    "id": "v002",
+    "name": "Rampur",
+    "latitude": 25.35,
+    "longitude": 82.95,
+    "population": 6200,
+    "connectivity": "moderate"
+  },
+  {
+    "id": "v003",
+    "name": "Lakshmipur",
+    "latitude": 25.27,
+    "longitude": 83.04,
+    "population": 5100,
+    "connectivity": "poor"
+  }
+]

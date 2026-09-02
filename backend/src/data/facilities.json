@@ -1,0 +1,29 @@
+[
+  {
+    "id": "f001",
+    "name": "Shivpur Health Centre",
+    "type": "PHC",
+    "latitude": 25.3176,
+    "longitude": 82.9739,
+    "emergency": true,
+    "telemedicine": true
+  },
+  {
+    "id": "f002",
+    "name": "Rampur Community Health Centre",
+    "type": "CHC",
+    "latitude": 25.3421,
+    "longitude": 82.9512,
+    "emergency": true,
+    "telemedicine": false
+  },
+  {
+    "id": "f003",
+    "name": "District Hospital",
+    "type": "Hospital",
+    "latitude": 25.2854,
+    "longitude": 83.0125,
+    "emergency": true,
+    "telemedicine": true
+  }
+]

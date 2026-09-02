@@ -1,0 +1,29 @@
+[
+  {
+    "id": "p001",
+    "name": "Dr. Sharma",
+    "specialization": "Pediatrics",
+    "facilityId": "f001",
+    "available": true,
+    "telemedicine": true,
+    "languages": ["Hindi", "English"]
+  },
+  {
+    "id": "p002",
+    "name": "Dr. Verma",
+    "specialization": "General Medicine",
+    "facilityId": "f001",
+    "available": true,
+    "telemedicine": true,
+    "languages": ["Hindi", "English"]
+  },
+  {
+    "id": "p003",
+    "name": "Dr. Patel",
+    "specialization": "Gynecology",
+    "facilityId": "f002",
+    "available": true,
+    "telemedicine": false,
+    "languages": ["Hindi", "English"]
+  }
+]
