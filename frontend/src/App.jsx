@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { MapPin, Mic, ArrowRight } from "lucide-react";
+import Results from "./pages/Results";
 import "./App.css";
 
 function App() {
@@ -7,11 +8,9 @@ function App() {
   const [need, setNeed] = useState("");
   const [location, setLocation] = useState(null);
   const [locationStatus, setLocationStatus] = useState("Not detected");
+  const [showResults, setShowResults] = useState(false);
 
-  // ===============================
-  // DETECT USER LOCATION
-  // ===============================
-
+  // Detect user's location
   const detectLocation = () => {
     setLocationStatus("Detecting...");
 
@@ -39,10 +38,7 @@ function App() {
     );
   };
 
-  // ===============================
-  // START CARE SEARCH
-  // ===============================
-
+  // Go to results page
   const handleStart = () => {
     if (!need) {
       alert("Please select your healthcare need.");
@@ -50,22 +46,26 @@ function App() {
     }
 
     if (!location) {
-      alert("Please detect your location first.");
+      alert("Please detect your location.");
       return;
     }
 
-    alert(
-      `Finding the best care option for ${need} near your location...`
-    );
+    setShowResults(true);
   };
+
+  // Show Results page
+  if (showResults) {
+    return (
+      <Results
+        need={need}
+        onBack={() => setShowResults(false)}
+      />
+    );
+  }
 
   return (
     <div className="app">
-
-      {/* ===============================
-          HEADER
-      =============================== */}
-
+      {/* HEADER */}
       <header className="header">
         <div className="logo">
           <span className="logo-icon">✚</span>
@@ -81,20 +81,12 @@ function App() {
         </select>
       </header>
 
-
-      {/* ===============================
-          MAIN CONTENT
-      =============================== */}
-
+      {/* MAIN CONTENT */}
       <main className="main">
 
-        {/* HERO */}
-
+        {/* HERO SECTION */}
         <section className="hero">
-
-          <p className="welcome">
-            Welcome to RuralCare
-          </p>
+          <p className="welcome">Welcome to RuralCare</p>
 
           <h1>
             Get the right healthcare,
@@ -106,34 +98,22 @@ function App() {
             We help you find the most accessible healthcare option
             based on your location, need and available services.
           </p>
-
         </section>
 
-
-        {/* ===============================
-            CARE REQUEST CARD
-        =============================== */}
-
+        {/* CARE SELECTION CARD */}
         <section className="care-card">
-
-          <h2>
-            What healthcare do you need?
-          </h2>
+          <h2>What healthcare do you need?</h2>
 
           <p className="hint">
             Choose an option or tell us using your voice.
           </p>
 
-
           {/* HEALTHCARE OPTIONS */}
-
           <div className="need-options">
 
             <button
               className={
-                need === "General Doctor"
-                  ? "selected"
-                  : ""
+                need === "General Doctor" ? "selected" : ""
               }
               onClick={() => setNeed("General Doctor")}
             >
@@ -141,12 +121,9 @@ function App() {
               <span>General Doctor</span>
             </button>
 
-
             <button
               className={
-                need === "Pediatrics"
-                  ? "selected"
-                  : ""
+                need === "Pediatrics" ? "selected" : ""
               }
               onClick={() => setNeed("Pediatrics")}
             >
@@ -154,12 +131,9 @@ function App() {
               <span>Children's Doctor</span>
             </button>
 
-
             <button
               className={
-                need === "Women's Health"
-                  ? "selected"
-                  : ""
+                need === "Women's Health" ? "selected" : ""
               }
               onClick={() => setNeed("Women's Health")}
             >
@@ -167,12 +141,9 @@ function App() {
               <span>Women's Health</span>
             </button>
 
-
             <button
               className={
-                need === "Other"
-                  ? "selected"
-                  : ""
+                need === "Other" ? "selected" : ""
               }
               onClick={() => setNeed("Other")}
             >
@@ -182,33 +153,21 @@ function App() {
 
           </div>
 
-
-          {/* ===============================
-              VOICE INPUT
-          =============================== */}
-
+          {/* VOICE BUTTON */}
           <button className="voice-button">
             <Mic size={22} />
             Tell us what you need
           </button>
 
-
-          {/* ===============================
-              LOCATION
-          =============================== */}
-
+          {/* LOCATION */}
           <div className="location-box">
-
             <MapPin size={22} />
 
             <div>
               <strong>Your location</strong>
 
-              <p>
-                {locationStatus}
-              </p>
+              <p>{locationStatus}</p>
             </div>
-
 
             <button
               className="location-button"
@@ -216,14 +175,9 @@ function App() {
             >
               Detect
             </button>
-
           </div>
 
-
-          {/* ===============================
-              CONTINUE
-          =============================== */}
-
+          {/* FIND CARE BUTTON */}
           <button
             className="continue-button"
             onClick={handleStart}
@@ -234,71 +188,46 @@ function App() {
 
         </section>
 
-
-        {/* ===============================
-            HOW IT WORKS
-        =============================== */}
-
+        {/* HOW IT WORKS */}
         <section className="how-section">
-
-          <h2>
-            How RuralCare works
-          </h2>
-
+          <h2>How RuralCare works</h2>
 
           <div className="steps">
 
             <div className="step">
-
               <div>📍</div>
 
-              <h3>
-                Find
-              </h3>
+              <h3>Find</h3>
 
               <p>
-                We understand your healthcare need
-                and location.
+                We understand your healthcare need and location.
               </p>
-
             </div>
 
-
             <div className="step">
-
               <div>⚙️</div>
 
-              <h3>
-                Match
-              </h3>
+              <h3>Match</h3>
 
               <p>
                 We compare available care options.
               </p>
-
             </div>
 
-
             <div className="step">
-
               <div>❤️</div>
 
-              <h3>
-                Connect
-              </h3>
+              <h3>Connect</h3>
 
               <p>
                 We guide you to the most accessible care.
               </p>
-
             </div>
 
           </div>
-
         </section>
 
       </main>
-
     </div>
   );
 }
