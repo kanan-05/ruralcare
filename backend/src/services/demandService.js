@@ -1,101 +1,111 @@
-// --------------------------------------------------
-// RuralCare Healthcare Intelligence Service
-// --------------------------------------------------
+let unmetDemand = [];
 
-// Temporary in-memory storage for unmet requests.
-// Later this can be replaced with MongoDB.
-const unmetRequests = [];
-
-
-// --------------------------------------------------
-// Record an unmet healthcare request
-// --------------------------------------------------
-function recordUnmetDemand(request = {}) {
-
-  const demand = {
-
-    id:
-      `demand-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-
-    need:
-      request.need || "Unknown",
-
-    village:
-      request.village || "Unknown",
-
-    latitude:
-      request.latitude,
-
-    longitude:
-      request.longitude,
-
-    connectivity:
-      request.connectivity || "unknown",
-
-    language:
-      request.language || "English",
-
-    reason:
-      request.reason ||
-      "No suitable care available",
-
-    createdAt:
-      new Date().toISOString()
+function recordUnmetDemand({
+  need,
+  village,
+  latitude,
+  longitude,
+  connectivity,
+  language,
+  reason
+}) {
+  const request = {
+    id: `demand-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    need,
+    village,
+    latitude,
+    longitude,
+    connectivity,
+    language,
+    reason,
+    createdAt: new Date().toISOString()
   };
 
+  unmetDemand.push(request);
 
-  unmetRequests.push(demand);
-
-
-  return demand;
+  return request;
 }
 
-
-// --------------------------------------------------
-// Get all unmet healthcare requests
-// --------------------------------------------------
 function getUnmetDemand() {
-
-  return unmetRequests;
+  return unmetDemand;
 }
 
+function groupDemandByVillageAndNeed() {
+  const groups = {};
 
-// --------------------------------------------------
-// Determine the main healthcare access gap
-// --------------------------------------------------
+  unmetDemand.forEach((request) => {
+    const key = `${request.village}::${request.need}`;
+
+    if (!groups[key]) {
+      groups[key] = {
+        village: request.village,
+        need: request.need,
+        requestCount: 0,
+        latitude: request.latitude,
+        longitude: request.longitude,
+        poorConnectivityRequests: 0,
+        moderateConnectivityRequests: 0,
+        goodConnectivityRequests: 0,
+        providerUnavailableRequests: 0
+      };
+    }
+
+    const group = groups[key];
+
+    group.requestCount += 1;
+
+    if (request.connectivity === "poor") {
+      group.poorConnectivityRequests += 1;
+    }
+
+    if (request.connectivity === "moderate") {
+      group.moderateConnectivityRequests += 1;
+    }
+
+    if (request.connectivity === "good") {
+      group.goodConnectivityRequests += 1;
+    }
+
+    if (
+      request.reason &&
+      (
+        request.reason.toLowerCase().includes("no available provider") ||
+        request.reason.toLowerCase().includes("no suitable provider")
+      )
+    ) {
+      group.providerUnavailableRequests += 1;
+    }
+  });
+
+  return Object.values(groups);
+}
+
 function determineAccessGap(item) {
+  const {
+    providerUnavailableRequests,
+    requestCount,
+    poorConnectivityRequests,
+    goodConnectivityRequests
+  } = item;
 
-  // Most/all requests are caused by
-  // provider/specialist unavailability.
   if (
-    item.providerUnavailableRequests >=
-    Math.ceil(item.requestCount * 0.5)
+    providerUnavailableRequests >=
+    Math.ceil(requestCount * 0.5)
   ) {
-
     return "specialist_unavailable";
   }
 
-
-  // Poor connectivity is the dominant barrier.
   if (
-    item.poorConnectivityRequests >
-    item.goodConnectivityRequests
+    poorConnectivityRequests >
+    goodConnectivityRequests
   ) {
-
     return "connectivity_barrier";
   }
 
-
-  // General access problem.
   return "care_access_gap";
 }
 
-
-// --------------------------------------------------
-// Determine recommended intervention
-// --------------------------------------------------
 function determineIntervention(item) {
-
   const {
     requestCount,
     poorConnectivityRequests,
@@ -103,143 +113,90 @@ function determineIntervention(item) {
     providerUnavailableRequests
   } = item;
 
+  const poorConnectivityRatio =
+    requestCount === 0
+      ? 0
+      : poorConnectivityRequests / requestCount;
 
-  // ------------------------------------------------
-  // Case 1:
-  // Provider unavailable + poor connectivity
-  //
-  // Healthcare should potentially come closer
-  // to the community.
-  // ------------------------------------------------
+  const goodConnectivityRatio =
+    requestCount === 0
+      ? 0
+      : goodConnectivityRequests / requestCount;
+
+  const providerUnavailableRatio =
+    requestCount === 0
+      ? 0
+      : providerUnavailableRequests / requestCount;
+
   if (
-    providerUnavailableRequests >=
-      Math.ceil(requestCount * 0.5) &&
-
-    poorConnectivityRequests >=
-      Math.ceil(requestCount * 0.5)
+    providerUnavailableRatio >= 0.5 &&
+    poorConnectivityRatio >= 0.5
   ) {
-
     return "mobile_outreach";
   }
 
-
-  // ------------------------------------------------
-  // Case 2:
-  // Provider unavailable + good connectivity
-  //
-  // Remote specialist access may be appropriate.
-  // ------------------------------------------------
   if (
-    providerUnavailableRequests >=
-      Math.ceil(requestCount * 0.5) &&
-
-    goodConnectivityRequests >=
-      Math.ceil(requestCount * 0.5)
+    providerUnavailableRatio >= 0.5 &&
+    goodConnectivityRatio >= 0.5
   ) {
-
     return "telemedicine";
   }
 
-
-  // ------------------------------------------------
-  // Case 3:
-  // Very high repeated demand
-  //
-  // Persistent demand may justify increasing
-  // local provider capacity.
-  // ------------------------------------------------
   if (requestCount >= 8) {
-
     return "provider_expansion";
   }
 
+  if (
+    requestCount >= 5 &&
+    poorConnectivityRequests > goodConnectivityRequests
+  ) {
+    return "mobile_outreach";
+  }
 
-  // ------------------------------------------------
-  // Case 4:
-  // Moderate repeated demand
-  // ------------------------------------------------
   if (requestCount >= 5) {
-
-    if (
-      poorConnectivityRequests >
-      goodConnectivityRequests
-    ) {
-
-      return "mobile_outreach";
-    }
-
     return "telemedicine";
   }
 
-
-  // ------------------------------------------------
-  // Case 5:
-  // Some repeated demand
-  // ------------------------------------------------
   if (requestCount >= 3) {
-
     return "monitor_and_assess";
   }
 
-
-  // ------------------------------------------------
-  // Case 6:
-  // Small amount of demand
-  // ------------------------------------------------
   return "monitor_demand";
 }
 
+function determinePriority(item) {
+  const {
+    requestCount,
+    poorConnectivityRequests,
+    providerUnavailableRequests
+  } = item;
 
-// --------------------------------------------------
-// Determine priority of healthcare gap
-// --------------------------------------------------
-function determinePriority(
-  requestCount,
-  poorConnectivityRequests,
-  providerUnavailableRequests
-) {
+  const poorConnectivityRatio =
+    requestCount === 0
+      ? 0
+      : poorConnectivityRequests / requestCount;
 
-  // ------------------------------------------------
-  // High priority
-  // ------------------------------------------------
   if (
     requestCount >= 8 ||
-
     (
       requestCount >= 5 &&
-      poorConnectivityRequests >=
-        Math.ceil(requestCount * 0.6)
+      poorConnectivityRatio >= 0.6
     )
   ) {
-
     return "high";
   }
 
-
-  // ------------------------------------------------
-  // Medium priority
-  // ------------------------------------------------
   if (
     requestCount >= 3 ||
     providerUnavailableRequests >= 3
   ) {
-
     return "medium";
   }
 
-
-  // ------------------------------------------------
-  // Low priority
-  // ------------------------------------------------
   return "low";
 }
 
-
-// --------------------------------------------------
-// Explain the recommended intervention
-// --------------------------------------------------
 function generateInterventionReason(item) {
-
   const {
     village,
     need,
@@ -247,274 +204,96 @@ function generateInterventionReason(item) {
     recommendedIntervention
   } = item;
 
+  const demandDescription =
+    requestCount === 1
+      ? `${need} demand was detected in ${village}`
+      : `Repeated ${need} demand was detected in ${village}`;
 
-  // ------------------------------------------------
-  // Mobile outreach
-  // ------------------------------------------------
-  if (
-    recommendedIntervention ===
-    "mobile_outreach"
-  ) {
-
+  if (recommendedIntervention === "mobile_outreach") {
     return (
-      `Repeated ${need} demand was detected in ${village}, ` +
+      `${demandDescription}, ` +
       `with significant access and connectivity barriers. ` +
       `Mobile healthcare outreach could bring the required service closer to the community.`
     );
   }
 
-
-  // ------------------------------------------------
-  // Telemedicine
-  // ------------------------------------------------
-  if (
-    recommendedIntervention ===
-    "telemedicine"
-  ) {
-
+  if (recommendedIntervention === "telemedicine") {
     return (
-      `Repeated ${need} demand was detected in ${village}. ` +
+      `${demandDescription}. ` +
       `Connectivity conditions indicate that telemedicine could reduce travel burden.`
     );
   }
 
-
-  // ------------------------------------------------
-  // Provider expansion
-  // ------------------------------------------------
-  if (
-    recommendedIntervention ===
-    "provider_expansion"
-  ) {
-
+  if (recommendedIntervention === "provider_expansion") {
     return (
-      `${requestCount} unmet ${need} requests were detected in ${village}. ` +
-      `Persistent demand suggests that additional local provider capacity may be needed.`
+      `${demandDescription} at a level that may justify ` +
+      `expanding local healthcare provider capacity.`
     );
   }
 
-
-  // ------------------------------------------------
-  // Monitor and assess
-  // ------------------------------------------------
-  if (
-    recommendedIntervention ===
-    "monitor_and_assess"
-  ) {
-
+  if (recommendedIntervention === "monitor_and_assess") {
     return (
-      `Moderate unmet ${need} demand was detected in ${village}. ` +
-      `The system recommends continued monitoring before a larger intervention.`
+      `${demandDescription}. ` +
+      `The demand pattern should be monitored to determine whether further intervention is needed.`
     );
   }
 
-
-  // ------------------------------------------------
-  // Monitor demand
-  // ------------------------------------------------
   return (
-    `Unmet ${need} demand has been detected in ${village}. ` +
-    `More requests are needed before recommending a major intervention.`
+    `${demandDescription}. ` +
+    `Continue monitoring demand before making a larger healthcare intervention.`
   );
 }
 
+function generateInsights() {
+  const groups = groupDemandByVillageAndNeed();
 
-// --------------------------------------------------
-// Group demand by village + healthcare need
-// --------------------------------------------------
-function getDemandInsights() {
-
-  const groups = {};
-
-
-  // ------------------------------------------------
-  // Group every unmet request
-  // ------------------------------------------------
-  unmetRequests.forEach((request) => {
-
-    const key =
-      `${request.village}-${request.need}`;
-
-
-    // ----------------------------------------------
-    // Create group if it doesn't exist
-    // ----------------------------------------------
-    if (!groups[key]) {
-
-      groups[key] = {
-
-        village:
-          request.village,
-
-        need:
-          request.need,
-
-        requestCount:
-          0,
-
-        latitude:
-          request.latitude,
-
-        longitude:
-          request.longitude,
-
-        poorConnectivityRequests:
-          0,
-
-        moderateConnectivityRequests:
-          0,
-
-        goodConnectivityRequests:
-          0,
-
-        providerUnavailableRequests:
-          0
-      };
-    }
-
-
-    // ----------------------------------------------
-    // Count request
-    // ----------------------------------------------
-    groups[key].requestCount += 1;
-
-
-    // ----------------------------------------------
-    // Count connectivity type
-    // ----------------------------------------------
-    if (
-      request.connectivity === "poor"
-    ) {
-
-      groups[key]
-        .poorConnectivityRequests += 1;
-    }
-
-
-    if (
-      request.connectivity === "moderate"
-    ) {
-
-      groups[key]
-        .moderateConnectivityRequests += 1;
-    }
-
-
-    if (
-      request.connectivity === "good"
-    ) {
-
-      groups[key]
-        .goodConnectivityRequests += 1;
-    }
-
-
-    // ----------------------------------------------
-    // Detect provider unavailability
-    // ----------------------------------------------
-    if (
-      request.reason &&
-      (
-        request.reason
-          .toLowerCase()
-          .includes(
-            "no available provider"
-          ) ||
-
-        request.reason
-          .toLowerCase()
-          .includes(
-            "no suitable provider"
-          )
-      )
-    ) {
-
-      groups[key]
-        .providerUnavailableRequests += 1;
-    }
-
-  });
-
-
-  // ------------------------------------------------
-  // Convert grouped object to array
-  // ------------------------------------------------
-  const insights =
-    Object.values(groups);
-
-
-  // ------------------------------------------------
-  // Generate intelligence for each group
-  // ------------------------------------------------
-  return insights.map((item) => {
-
-    const accessGap =
-      determineAccessGap(item);
-
-
+  return groups.map((item) => {
+    const accessGap = determineAccessGap(item);
     const recommendedIntervention =
       determineIntervention(item);
-
-
-    const priority =
-      determinePriority(
-
-        item.requestCount,
-
-        item.poorConnectivityRequests,
-
-        item.providerUnavailableRequests
-      );
-
-
-    const recommendationReason =
-      generateInterventionReason({
-
-        ...item,
-
-        recommendedIntervention
-      });
-
+    const priority = determinePriority(item);
 
     return {
-
-      ...item,
-
+      village: item.village,
+      need: item.need,
+      requestCount: item.requestCount,
+      latitude: item.latitude,
+      longitude: item.longitude,
+      poorConnectivityRequests:
+        item.poorConnectivityRequests,
+      moderateConnectivityRequests:
+        item.moderateConnectivityRequests,
+      goodConnectivityRequests:
+        item.goodConnectivityRequests,
+      providerUnavailableRequests:
+        item.providerUnavailableRequests,
       accessGap,
-
       priority,
-
       recommendedIntervention,
-
-      recommendationReason
+      recommendationReason:
+        generateInterventionReason({
+          ...item,
+          recommendedIntervention
+        })
     };
   });
 }
 
-
-// --------------------------------------------------
-// Get only high-priority healthcare gaps
-// --------------------------------------------------
 function getPriorityGaps() {
-
-  return getDemandInsights()
-    .filter(
-      (item) =>
-        item.priority === "high"
-    );
+  return generateInsights().filter(
+    (insight) => insight.priority === "high"
+  );
 }
 
-
-// --------------------------------------------------
-// Export service functions
-// --------------------------------------------------
 module.exports = {
-
   recordUnmetDemand,
-
   getUnmetDemand,
-
-  getDemandInsights,
-
+  groupDemandByVillageAndNeed,
+  determineAccessGap,
+  determineIntervention,
+  determinePriority,
+  generateInterventionReason,
+  generateInsights,
+  getDemandInsights: generateInsights,
   getPriorityGaps
 };
