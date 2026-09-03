@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import {
   ArrowLeft,
   MapPin,
@@ -7,11 +9,16 @@ import {
   Navigation,
   Clock,
   CheckCircle,
+  Calendar,
+  ShieldCheck,
+  ArrowRight,
 } from "lucide-react";
 
 import "../App.css";
 
 function CareDetails({ type, onBack }) {
+  const [actionStarted, setActionStarted] = useState(false);
+
   const details = {
     telemedicine: {
       title: "Telemedicine",
@@ -21,6 +28,10 @@ function CareDetails({ type, onBack }) {
       description:
         "Connect with a qualified doctor remotely from your village using your phone.",
       action: "Connect to Doctor",
+      location: "Remote consultation",
+      time: "Available today",
+      next:
+        "You will be connected to a healthcare professional through a remote consultation.",
     },
 
     mobile: {
@@ -31,6 +42,10 @@ function CareDetails({ type, onBack }) {
       description:
         "A mobile medical team can provide basic healthcare services closer to your community.",
       action: "View Visit Details",
+      location: "Your village area",
+      time: "Tomorrow",
+      next:
+        "The mobile medical team is expected to visit your area tomorrow. Visit details can be confirmed before you travel.",
     },
 
     transport: {
@@ -41,6 +56,10 @@ function CareDetails({ type, onBack }) {
       description:
         "Explore available transport options to help you reach the recommended healthcare facility.",
       action: "Find Transport",
+      location: "Recommended facility",
+      time: "~10 min travel",
+      next:
+        "Choose a transport option that works for you and confirm availability before travelling.",
     },
 
     facility: {
@@ -51,49 +70,74 @@ function CareDetails({ type, onBack }) {
       description:
         "This facility was selected because it provides suitable care close to your location.",
       action: "Get Directions",
+      location: "3.2 km away",
+      time: "~10 min travel",
+      next:
+        "Follow the directions to reach the recommended healthcare facility.",
     },
   };
 
   const selected = details[type] || details.facility;
   const Icon = selected.icon;
 
+  const handleAction = () => {
+    setActionStarted(true);
+  };
+
+  const handleCall = () => {
+    window.location.href = "tel:";
+  };
+
   return (
     <div className="app">
 
       {/* HEADER */}
       <header className="header">
+
         <div className="logo">
           <span className="logo-icon">✚</span>
           <span>RuralCare</span>
         </div>
 
-        <button className="back-button" onClick={onBack}>
+        <button
+          className="back-button"
+          onClick={onBack}
+        >
           <ArrowLeft size={20} />
           Back
         </button>
+
       </header>
 
       <main className="main details-page">
 
-        {/* INTRO */}
-        <section className="hero">
-          <p className="welcome">Care option</p>
+        {/* HERO */}
+        <section className="hero details-hero">
 
-          <h1>{selected.title}</h1>
+          <p className="welcome">
+            Care option
+          </p>
+
+          <h1>
+            {selected.title}
+          </h1>
 
           <p className="subtitle">
             {selected.subtitle}
           </p>
+
         </section>
 
-        {/* MAIN DETAILS CARD */}
+        {/* MAIN CARD */}
         <section className="details-card">
 
           <div className="details-icon">
             <Icon size={34} />
           </div>
 
-          <h2>{selected.title}</h2>
+          <h2>
+            {selected.title}
+          </h2>
 
           <div className="details-status">
             <span className="status-dot"></span>
@@ -107,36 +151,115 @@ function CareDetails({ type, onBack }) {
           {/* INFORMATION */}
           <div className="details-info">
 
-            <div>
-              <CheckCircle size={19} />
-              <span>Suitable for your healthcare need</span>
-            </div>
-
-            <div>
-              <Clock size={19} />
-              <span>Availability information shown above</span>
-            </div>
-
-            <div>
+            <div className="detail-info-item">
               <MapPin size={19} />
-              <span>Based on your detected location</span>
+
+              <div>
+                <strong>Location</strong>
+                <span>{selected.location}</span>
+              </div>
+            </div>
+
+            <div className="detail-info-item">
+              <Clock size={19} />
+
+              <div>
+                <strong>Availability</strong>
+                <span>{selected.time}</span>
+              </div>
+            </div>
+
+            <div className="detail-info-item">
+              <CheckCircle size={19} />
+
+              <div>
+                <strong>Care suitability</strong>
+                <span>
+                  Suitable for your selected need
+                </span>
+              </div>
+            </div>
+
+            <div className="detail-info-item">
+              <ShieldCheck size={19} />
+
+              <div>
+                <strong>Accessibility</strong>
+                <span>
+                  Designed to reduce unnecessary travel
+                </span>
+              </div>
             </div>
 
           </div>
 
           {/* ACTION */}
-          <button className="details-action">
-            <Icon size={20} />
-            {selected.action}
-          </button>
+          {!actionStarted ? (
 
-          {/* CALL FOR FACILITY */}
+            <button
+              className="details-action"
+              onClick={handleAction}
+            >
+              <Icon size={20} />
+              {selected.action}
+              <ArrowRight size={19} />
+            </button>
+
+          ) : (
+
+            <div className="action-success">
+
+              <div className="action-success-icon">
+                <CheckCircle size={24} />
+              </div>
+
+              <div>
+                <strong>
+                  Next step ready
+                </strong>
+
+                <p>
+                  {selected.next}
+                </p>
+              </div>
+
+            </div>
+
+          )}
+
+          {/* FACILITY CALL */}
           {type === "facility" && (
-            <button className="secondary-action">
+
+            <button
+              className="secondary-action"
+              onClick={handleCall}
+            >
               <Phone size={19} />
               Call Facility
             </button>
+
           )}
+
+        </section>
+
+        {/* WHAT HAPPENS NEXT */}
+        <section className="next-step-card">
+
+          <div className="next-step-icon">
+            <Calendar size={22} />
+          </div>
+
+          <div>
+
+            <h3>
+              What happens next?
+            </h3>
+
+            <p>
+              {selected.next}
+            </p>
+
+          </div>
 
         </section>
 
@@ -146,17 +269,25 @@ function CareDetails({ type, onBack }) {
           <CheckCircle size={22} />
 
           <div>
-            <h3>RuralCare recommendation</h3>
+
+            <h3>
+              RuralCare recommendation
+            </h3>
 
             <p>
-              We help you choose an accessible care option.
-              Always seek emergency medical help when needed.
+              We help you choose an accessible care
+              option based on your healthcare need,
+              availability and travel requirements.
+              Always seek emergency medical help
+              when needed.
             </p>
+
           </div>
 
         </section>
 
       </main>
+
     </div>
   );
 }
