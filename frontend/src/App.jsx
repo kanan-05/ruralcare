@@ -8,7 +8,6 @@ import Checkup from "./pages/Checkup";
 
 import "./App.css";
 
-
 function App() {
 
   const [language, setLanguage] = useState("English");
@@ -673,6 +672,7 @@ function App() {
     </div>
 
   );
+
 
 }
 
