@@ -5,24 +5,66 @@ import {
   Ambulance,
   AlertTriangle,
   ShieldAlert,
+  Navigation,
+  Clock,
+  HeartPulse,
 } from "lucide-react";
 
 import "../App.css";
+import "./Emergency.css";
 
 
 function Emergency({ onBack }) {
 
   const handleEmergencyCall = () => {
+
+    /*
+      IMPORTANT:
+      Replace the placeholder with a VERIFIED local
+      emergency number before deployment.
+
+      Example:
+      window.location.href = "tel:VERIFIED_NUMBER";
+    */
+
     alert(
-      "Emergency assistance should be contacted immediately. Connect this button to the verified local emergency number before deployment."
+      "Emergency services should be contacted immediately. The verified local emergency number will be connected here."
     );
   };
 
 
   const handleFindEmergencyCare = () => {
-    alert(
-      "Nearest emergency care will be shown here once location services and the healthcare backend are connected."
-    );
+
+    /*
+      This can later call:
+      GET /api/facilities/emergency
+
+      For now, open the patient's map/location service.
+    */
+
+    if (navigator.geolocation) {
+
+      navigator.geolocation.getCurrentPosition(
+        () => {
+          alert(
+            "Your location has been detected. Nearby emergency facilities will be shown here."
+          );
+        },
+        () => {
+          alert(
+            "We couldn't access your location. Please enable location services or seek the nearest emergency facility."
+          );
+        }
+      );
+
+    } else {
+
+      alert(
+        "Location services are not available on this device."
+      );
+
+    }
+
   };
 
 
@@ -31,21 +73,29 @@ function Emergency({ onBack }) {
     <div className="emergency-page">
 
 
-      {/* ========================================= */}
-      {/* HEADER */}
-      {/* ========================================= */}
+      {/* =========================================
+          HEADER
+      ========================================= */}
 
       <header className="emergency-header">
 
-        <div className="emergency-logo">
+        <div className="emergency-brand">
 
-          <span className="emergency-logo-icon">
+          <div className="emergency-brand-icon">
             ✚
-          </span>
+          </div>
 
-          <span>
-            RuralCare
-          </span>
+          <div>
+
+            <h1>
+              RuralCare
+            </h1>
+
+            <span>
+              Emergency support
+            </span>
+
+          </div>
 
         </div>
 
@@ -55,7 +105,7 @@ function Emergency({ onBack }) {
           onClick={onBack}
         >
 
-          <ArrowLeft size={20} />
+          <ArrowLeft size={18} />
 
           <span>
             Back
@@ -67,74 +117,77 @@ function Emergency({ onBack }) {
 
 
 
-      {/* ========================================= */}
-      {/* MAIN CONTENT */}
-      {/* ========================================= */}
+      {/* =========================================
+          MAIN
+      ========================================= */}
 
       <main className="emergency-main">
 
 
-        {/* ========================================= */}
-        {/* ICON */}
-        {/* ========================================= */}
+        {/* =========================================
+            EMERGENCY STATUS
+        ========================================= */}
 
-        <div className="emergency-icon-wrapper">
+        <div className="emergency-status">
 
-          <div className="emergency-icon">
+          <div className="emergency-pulse">
 
-            <Ambulance size={52} />
+            <Ambulance size={34} />
 
           </div>
 
         </div>
 
 
-
-        {/* ========================================= */}
-        {/* LABEL */}
-        {/* ========================================= */}
-
-        <p className="emergency-label">
-
+        <div className="emergency-label">
           EMERGENCY CARE
-
-        </p>
-
+        </div>
 
 
-        {/* ========================================= */}
-        {/* MAIN HEADING */}
-        {/* ========================================= */}
+        <h2 className="emergency-title">
 
-        <h1 className="emergency-title">
-
-          You may need
+          Please get
           <br />
 
-          immediate medical attention
+          immediate medical help
 
-        </h1>
+        </h2>
 
-
-
-        {/* ========================================= */}
-        {/* DESCRIPTION */}
-        {/* ========================================= */}
 
         <p className="emergency-description">
 
-          Severe difficulty breathing can be serious.
-          Please do not delay getting medical help.
+          You reported severe difficulty breathing.
+          This can be serious and should not be delayed.
 
         </p>
 
 
 
-        {/* ========================================= */}
-        {/* ACTION BUTTONS */}
-        {/* ========================================= */}
+        {/* =========================================
+            PRIMARY ACTIONS
+        ========================================= */}
 
-        <div className="emergency-actions">
+        <section className="emergency-action-card">
+
+
+          <div className="action-card-heading">
+
+            <HeartPulse size={20} />
+
+            <div>
+
+              <h3>
+                What to do now
+              </h3>
+
+              <p>
+                Choose the fastest way to reach help.
+              </p>
+
+            </div>
+
+          </div>
+
 
 
           <button
@@ -142,9 +195,12 @@ function Emergency({ onBack }) {
             onClick={handleEmergencyCall}
           >
 
-            <Phone size={22} />
+            <div className="action-icon red">
+              <Phone size={22} />
+            </div>
 
-            <div>
+
+            <div className="action-content">
 
               <strong>
                 Get Emergency Help
@@ -156,6 +212,11 @@ function Emergency({ onBack }) {
 
             </div>
 
+
+            <span className="action-arrow">
+              →
+            </span>
+
           </button>
 
 
@@ -165,37 +226,75 @@ function Emergency({ onBack }) {
             onClick={handleFindEmergencyCare}
           >
 
-            <MapPin size={22} />
+            <div className="action-icon green">
+              <Navigation size={21} />
+            </div>
 
-            <div>
+
+            <div className="action-content">
 
               <strong>
                 Find Emergency Care
               </strong>
 
               <span>
-                Locate the nearest facility
+                Locate the nearest emergency facility
               </span>
 
             </div>
 
+
+            <span className="action-arrow">
+              →
+            </span>
+
           </button>
 
 
-        </div>
+        </section>
 
 
 
-        {/* ========================================= */}
-        {/* IMPORTANT WARNING */}
-        {/* ========================================= */}
+        {/* =========================================
+            DO NOT DELAY
+        ========================================= */}
 
-        <div className="emergency-warning">
+        <section className="do-not-delay">
+
+          <div className="delay-icon">
+
+            <Clock size={20} />
+
+          </div>
 
 
-          <div className="emergency-warning-icon">
+          <div>
 
-            <ShieldAlert size={24} />
+            <strong>
+              Do not delay
+            </strong>
+
+            <p>
+              If symptoms are getting worse, seek
+              emergency medical care immediately.
+            </p>
+
+          </div>
+
+        </section>
+
+
+
+        {/* =========================================
+            SAFETY INFORMATION
+        ========================================= */}
+
+        <section className="emergency-info-card">
+
+
+          <div className="info-icon">
+
+            <ShieldAlert size={22} />
 
           </div>
 
@@ -203,37 +302,60 @@ function Emergency({ onBack }) {
           <div>
 
             <h3>
-              Important
+              While getting help
             </h3>
 
-            <p>
+            <ul>
 
-              If your condition is getting worse,
-              seek emergency medical care immediately.
+              <li>
+                Stay with someone if possible.
+              </li>
 
-            </p>
+              <li>
+                Avoid travelling alone if you are severely unwell.
+              </li>
+
+              <li>
+                If symptoms suddenly worsen, seek emergency assistance immediately.
+              </li>
+
+            </ul>
 
           </div>
 
+        </section>
+
+
+
+        {/* =========================================
+            LOCATION
+        ========================================= */}
+
+        <div className="emergency-location-note">
+
+          <MapPin size={17} />
+
+          <span>
+            Your location can help RuralCare identify
+            the closest available emergency facility.
+          </span>
 
         </div>
 
 
 
-        {/* ========================================= */}
-        {/* SAFETY NOTE */}
-        {/* ========================================= */}
+        {/* =========================================
+            DISCLAIMER
+        ========================================= */}
 
-        <div className="emergency-safety-note">
+        <div className="emergency-disclaimer">
 
-          <AlertTriangle size={18} />
+          <AlertTriangle size={16} />
 
           <span>
-
             RuralCare does not diagnose medical conditions.
-            This screen is provided to help you reach
+            This safety screen is designed to help you reach
             urgent care quickly.
-
           </span>
 
         </div>

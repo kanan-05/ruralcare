@@ -135,7 +135,7 @@ function StatCard({
 }
 
 
-function Dashboard() {
+function Dashboard({ onStartPatient }) {
   return (
     <div className="dashboard">
 
@@ -157,7 +157,12 @@ function Dashboard() {
         </div>
 
         <div className="header-right">
-
+           <button
+  className="patient-button"
+  onClick={onStartPatient}
+>
+  Find Care
+</button>
           <span className="live-status">
             <span className="live-dot"></span>
             Live data

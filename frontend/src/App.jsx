@@ -1,23 +1,47 @@
 import { useState } from "react";
-import { MapPin, Mic, ArrowRight } from "lucide-react";
+
+import {
+  MapPin,
+  Mic,
+  ArrowRight,
+} from "lucide-react";
 
 import Results from "./pages/Results";
 import Symptoms from "./pages/Symptoms";
 import Emergency from "./pages/Emergency";
 import Checkup from "./pages/Checkup";
+import Dashboard from "./Dashboard";
 
 import "./App.css";
 
+
 function App() {
 
+  /* =========================================
+     LANGUAGE
+  ========================================= */
+
   const [language, setLanguage] = useState("English");
+
+
+  /* =========================================
+     PATIENT STATE
+  ========================================= */
 
   const [need, setNeed] = useState("");
 
   const [location, setLocation] = useState(null);
 
   const [locationStatus, setLocationStatus] =
-    useState("Not detected");
+    useState("");
+
+
+  /* =========================================
+     SCREEN STATE
+  ========================================= */
+
+  const [showDashboard, setShowDashboard] =
+    useState(true);
 
   const [showResults, setShowResults] =
     useState(false);
@@ -25,65 +49,133 @@ function App() {
   const [showSymptoms, setShowSymptoms] =
     useState(false);
 
-  const [symptomData, setSymptomData] =
-    useState(null);
-
   const [showEmergency, setShowEmergency] =
     useState(false);
 
   const [showCheckup, setShowCheckup] =
     useState(false);
 
+
+  /* =========================================
+     PATIENT DATA
+  ========================================= */
+
+  const [symptomData, setSymptomData] =
+    useState(null);
+
   const [checkupType, setCheckupType] =
-    useState("");
+    useState("General Check-up");
 
 
-  // =========================================
-  // DETECT USER'S LOCATION
-  // =========================================
+  /* =========================================
+     TRANSLATIONS
+  ========================================= */
+
+  const translations = {
+
+    English: {
+      welcome: "Healthcare that comes closer to you",
+      subtitle:
+        "Find the safest and most accessible way to get the care you need.",
+      question: "What healthcare do you need?",
+      symptoms: "I have symptoms",
+      checkup: "I need a check-up",
+      children: "Children's Doctor",
+      women: "Women's Health",
+      other: "Other",
+      location: "Your location",
+      detect: "Use my location",
+      detected: "Location detected",
+      find: "Find My Best Care",
+      how: "How RuralCare works",
+    },
+
+    Hindi: {
+      welcome: "स्वास्थ्य सेवा आपके करीब",
+      subtitle:
+        "अपनी जरूरत के अनुसार सबसे सुरक्षित और आसान स्वास्थ्य सेवा खोजें।",
+      question: "आपको किस स्वास्थ्य सेवा की आवश्यकता है?",
+      symptoms: "मुझे कुछ लक्षण हैं",
+      checkup: "मुझे जांच करवानी है",
+      children: "बच्चों के डॉक्टर",
+      women: "महिला स्वास्थ्य",
+      other: "अन्य",
+      location: "आपका स्थान",
+      detect: "मेरा स्थान उपयोग करें",
+      detected: "स्थान मिल गया",
+      find: "मेरे लिए सही देखभाल खोजें",
+      how: "RuralCare कैसे काम करता है",
+    },
+
+    Tamil: {
+      welcome: "சுகாதார சேவை உங்களுக்கு அருகில்",
+      subtitle:
+        "உங்களுக்கு தேவையான பாதுகாப்பான மற்றும் எளிதான சிகிச்சையை கண்டறியுங்கள்.",
+      question: "உங்களுக்கு என்ன சுகாதார சேவை தேவை?",
+      symptoms: "எனக்கு அறிகுறிகள் உள்ளன",
+      checkup: "எனக்கு பரிசோதனை வேண்டும்",
+      children: "குழந்தைகள் மருத்துவர்",
+      women: "பெண்கள் நலம்",
+      other: "மற்றவை",
+      location: "உங்கள் இருப்பிடம்",
+      detect: "எனது இருப்பிடத்தைப் பயன்படுத்தவும்",
+      detected: "இருப்பிடம் கண்டறியப்பட்டது",
+      find: "சிறந்த சிகிச்சையை கண்டறியவும்",
+      how: "RuralCare எப்படி வேலை செய்கிறது",
+    },
+
+  };
+
+
+  const t =
+    translations[language] ||
+    translations.English;
+
+
+  /* =========================================
+     LOCATION
+  ========================================= */
 
   const detectLocation = () => {
-
-    setLocationStatus("Detecting...");
-
 
     if (!navigator.geolocation) {
 
       setLocationStatus(
-        "Location is not supported"
+        "Location services are not supported on this device."
       );
 
       return;
     }
 
 
+    setLocationStatus(
+      "Detecting your location..."
+    );
+
+
     navigator.geolocation.getCurrentPosition(
 
       (position) => {
 
-        const {
-          latitude,
-          longitude
-        } = position.coords;
+        const coords = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        };
 
 
-        setLocation({
-          latitude,
-          longitude,
-        });
+        setLocation(coords);
 
 
         setLocationStatus(
-          `Location detected (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`
+          `${t.detected} ✓`
         );
 
       },
 
-
       () => {
 
         setLocationStatus(
-          "Unable to detect location"
+          "Unable to detect location. Please allow location access."
         );
 
       }
@@ -93,83 +185,210 @@ function App() {
   };
 
 
-  // =========================================
-  // GO TO RESULTS PAGE
-  // =========================================
+  /* =========================================
+     START CARE FLOW
+  ========================================= */
 
   const handleStart = () => {
 
     if (!need) {
 
       alert(
-        "Please select your healthcare need."
+        language === "Hindi"
+          ? "कृपया अपनी स्वास्थ्य आवश्यकता चुनें।"
+          : language === "Tamil"
+          ? "உங்கள் சுகாதார தேவையைத் தேர்ந்தெடுக்கவும்."
+          : "Please select what healthcare you need."
       );
 
       return;
     }
 
 
-    if (!location) {
+    if (
+      location?.latitude == null ||
+      location?.longitude == null
+    ) {
 
       alert(
-        "Please detect your location."
+        language === "Hindi"
+          ? "कृपया पहले अपना स्थान साझा करें।"
+          : language === "Tamil"
+          ? "தயவுசெய்து முதலில் உங்கள் இருப்பிடத்தைப் பகிரவும்."
+          : "Please share your location first."
       );
 
       return;
     }
 
+
+    /* -----------------------------------------
+       SYMPTOM FLOW
+    ----------------------------------------- */
+
+    if (need === "Symptoms") {
+
+      setShowSymptoms(true);
+
+      setShowResults(false);
+      setShowEmergency(false);
+      setShowCheckup(false);
+
+      return;
+    }
+
+
+    /* -----------------------------------------
+       CHECK-UP FLOW
+    ----------------------------------------- */
+
+    if (need === "Check-up") {
+
+      setShowCheckup(true);
+
+      setShowSymptoms(false);
+      setShowResults(false);
+      setShowEmergency(false);
+
+      return;
+    }
+
+
+    /* -----------------------------------------
+       DIRECT CARE FLOW
+    ----------------------------------------- */
+
+    setShowResults(true);
+
+    setShowSymptoms(false);
+    setShowEmergency(false);
+    setShowCheckup(false);
+
+  };
+
+
+  /* =========================================
+     SYMPTOM CONTINUE
+  ========================================= */
+
+  const handleSymptomsContinue = (data) => {
+
+    setSymptomData(data);
+
+
+    /* -----------------------------------------
+       EMERGENCY BRANCH
+    ----------------------------------------- */
+
+    if (data?.emergency === true) {
+
+      console.log(
+        "Emergency pathway triggered:",
+        data
+      );
+
+
+      setShowSymptoms(false);
+
+      setShowResults(false);
+
+      setShowCheckup(false);
+
+      setShowEmergency(true);
+
+      return;
+    }
+
+
+    /* -----------------------------------------
+       NORMAL CARE BRANCH
+    ----------------------------------------- */
+
+    setShowSymptoms(false);
+
+    setShowEmergency(false);
 
     setShowResults(true);
 
   };
 
 
-  // =========================================
-  // EMERGENCY PAGE
-  // =========================================
+  /* =========================================
+     CHECKUP CONTINUE
+  ========================================= */
+
+  const handleCheckupContinue = (type) => {
+
+    setCheckupType(
+      type || "General Check-up"
+    );
+
+
+    setShowCheckup(false);
+
+    setShowEmergency(false);
+
+    setShowResults(true);
+
+  };
+
+
+  /* =========================================
+     RESET TO PATIENT HOME
+  ========================================= */
+
+  const resetPatientFlow = () => {
+
+    setShowResults(false);
+
+    setShowSymptoms(false);
+
+    setShowEmergency(false);
+
+    setShowCheckup(false);
+
+    setSymptomData(null);
+
+    setNeed("");
+
+  };
+
+
+  /* =========================================
+     DASHBOARD
+  ========================================= */
+
+  if (showDashboard) {
+
+    return (
+
+      <Dashboard
+        onStartPatient={() =>
+          setShowDashboard(false)
+        }
+      />
+
+    );
+
+  }
+
+
+  /* =========================================
+     EMERGENCY SCREEN
+  ========================================= */
 
   if (showEmergency) {
 
     return (
 
       <Emergency
-        onBack={() =>
-          setShowEmergency(false)
-        }
-      />
+        onBack={() => {
 
-    );
+          setShowEmergency(false);
 
-  }
-
-
-  // =========================================
-  // CHECK-UP PAGE
-  // =========================================
-
-  if (showCheckup) {
-
-    return (
-
-      <Checkup
-
-        onBack={() =>
-          setShowCheckup(false)
-        }
-
-
-        onContinue={(type) => {
-
-          setCheckupType(type);
-
-          setShowCheckup(false);
-
-          setNeed("Check-up");
-
-          setShowResults(true);
+          setShowSymptoms(true);
 
         }}
-
       />
 
     );
@@ -177,46 +396,24 @@ function App() {
   }
 
 
-  // =========================================
-  // SYMPTOMS PAGE
-  // =========================================
+  /* =========================================
+     SYMPTOMS SCREEN
+  ========================================= */
 
   if (showSymptoms) {
 
     return (
 
       <Symptoms
+        onBack={() => {
 
-        onBack={() =>
-          setShowSymptoms(false)
-        }
-
-
-        onContinue={(data) => {
-
-          setSymptomData(data);
-
-
-          if (
-            data.severeBreathing === true
-          ) {
-
-            setShowSymptoms(false);
-
-            setShowEmergency(true);
-
-          } else {
-
-            setShowSymptoms(false);
-
-            setNeed("Symptoms");
-
-            setShowResults(true);
-
-          }
+          setShowSymptoms(false);
 
         }}
 
+        onContinue={
+          handleSymptomsContinue
+        }
       />
 
     );
@@ -224,9 +421,34 @@ function App() {
   }
 
 
-  // =========================================
-  // RESULTS PAGE
-  // =========================================
+  /* =========================================
+     CHECK-UP SCREEN
+  ========================================= */
+
+  if (showCheckup) {
+
+    return (
+
+      <Checkup
+        onBack={() => {
+
+          setShowCheckup(false);
+
+        }}
+
+        onContinue={
+          handleCheckupContinue
+        }
+      />
+
+    );
+
+  }
+
+
+  /* =========================================
+     RESULTS SCREEN
+  ========================================= */
 
   if (showResults) {
 
@@ -240,9 +462,15 @@ function App() {
 
         checkupType={checkupType}
 
-        onBack={() =>
-          setShowResults(false)
-        }
+        location={location}
+
+        language={language}
+
+        onBack={() => {
+
+          setShowResults(false);
+
+        }}
 
       />
 
@@ -251,18 +479,18 @@ function App() {
   }
 
 
-  // =========================================
-  // HOMEPAGE
-  // =========================================
+  /* =========================================
+     PATIENT HOME
+  ========================================= */
 
   return (
 
     <div className="app">
 
 
-      {/* ================================= */}
-      {/* HEADER */}
-      {/* ================================= */}
+      {/* =====================================
+          HEADER
+      ===================================== */}
 
       <header className="header">
 
@@ -279,90 +507,105 @@ function App() {
         </div>
 
 
-        <select
+        <div className="header-actions">
 
-          value={language}
+          <select
+            value={language}
+            onChange={(e) =>
+              setLanguage(e.target.value)
+            }
+          >
 
-          onChange={(e) =>
-            setLanguage(e.target.value)
-          }
+            <option value="English">
+              English
+            </option>
 
-        >
+            <option value="Hindi">
+              हिन्दी
+            </option>
 
-          <option>
-            English
-          </option>
+            <option value="Tamil">
+              தமிழ்
+            </option>
 
-          <option>
-            Hindi
-          </option>
+          </select>
 
-        </select>
+        </div>
 
       </header>
 
 
 
-      {/* ================================= */}
-      {/* MAIN CONTENT */}
-      {/* ================================= */}
+      {/* =====================================
+          MAIN
+      ===================================== */}
 
       <main className="main">
 
 
-        {/* ================================= */}
-        {/* HERO SECTION */}
-        {/* ================================= */}
+        {/* HERO */}
 
         <section className="hero">
 
           <p className="welcome">
-            Welcome to RuralCare
+            {t.welcome}
           </p>
 
 
           <h1>
-
-            Get the right healthcare,
+            Don't travel for care
             <br />
-            closer to you.
-
+            <span>
+              unless you need to.
+            </span>
           </h1>
 
 
           <p className="subtitle">
-
-            We help you find the most accessible healthcare option
-            based on your location, need and available services.
-
+            {t.subtitle}
           </p>
+
+
+          {/* VOICE CONCEPT */}
+
+          <button
+            className="voice-button"
+            type="button"
+            onClick={() =>
+              alert(
+                "Voice input will be available in the next version."
+              )
+            }
+          >
+
+            <Mic size={20} />
+
+            Tell RuralCare what you need
+
+          </button>
 
         </section>
 
 
 
-        {/* ================================= */}
-        {/* CARE SELECTION CARD */}
-        {/* ================================= */}
+        {/* =====================================
+            CARE CARD
+        ===================================== */}
 
         <section className="care-card">
 
-          <h2>
-            What healthcare do you need?
-          </h2>
+          <div className="card-heading">
 
+            <h2>
+              {t.question}
+            </h2>
 
-          <p className="hint">
+            <p>
+              Choose one option to get started.
+            </p>
 
-            Choose an option or tell us using your voice.
+          </div>
 
-          </p>
-
-
-
-          {/* ================================= */}
-          {/* HEALTHCARE OPTIONS */}
-          {/* ================================= */}
 
           <div className="need-options">
 
@@ -370,23 +613,23 @@ function App() {
             {/* SYMPTOMS */}
 
             <button
-
               className={
                 need === "Symptoms"
-                  ? "selected"
-                  : ""
+                  ? "need-option selected"
+                  : "need-option"
               }
 
               onClick={() =>
-                setShowSymptoms(true)
+                setNeed("Symptoms")
               }
-
             >
 
-              🤒
+              <span className="need-emoji">
+                🤒
+              </span>
 
               <span>
-                I have symptoms
+                {t.symptoms}
               </span>
 
             </button>
@@ -396,162 +639,144 @@ function App() {
             {/* CHECK-UP */}
 
             <button
-
               className={
                 need === "Check-up"
-                  ? "selected"
-                  : ""
+                  ? "need-option selected"
+                  : "need-option"
               }
 
               onClick={() =>
-                setShowCheckup(true)
+                setNeed("Check-up")
               }
-
             >
 
-              🩺
+              <span className="need-emoji">
+                🩺
+              </span>
 
               <span>
-                I need a check-up
+                {t.checkup}
               </span>
 
             </button>
 
 
 
-            {/* ================================= */}
-            {/* CHILDREN'S DOCTOR */}
-            {/* ================================= */}
+            {/* PEDIATRICS */}
 
             <button
-
               className={
-                need === "Children's Doctor"
-                  ? "selected"
-                  : ""
+                need === "Pediatrics"
+                  ? "need-option selected"
+                  : "need-option"
               }
 
               onClick={() =>
-                setNeed("Children's Doctor")
+                setNeed("Pediatrics")
               }
-
             >
 
-              👶
+              <span className="need-emoji">
+                👶
+              </span>
 
               <span>
-                Children's Doctor
+                {t.children}
               </span>
 
             </button>
 
 
 
-            {/* ================================= */}
-            {/* WOMEN'S HEALTH */}
-            {/* ================================= */}
+            {/* WOMEN */}
 
             <button
-
               className={
-                need === "Women's Health"
-                  ? "selected"
-                  : ""
+                need === "Gynecology"
+                  ? "need-option selected"
+                  : "need-option"
               }
 
               onClick={() =>
-                setNeed("Women's Health")
+                setNeed("Gynecology")
               }
-
             >
 
-              👩
+              <span className="need-emoji">
+                👩
+              </span>
 
               <span>
-                Women's Health
+                {t.women}
               </span>
 
             </button>
 
 
 
-            {/* ================================= */}
             {/* OTHER */}
-            {/* ================================= */}
 
             <button
-
               className={
-                need === "Other"
-                  ? "selected"
-                  : ""
+                need === "General Medicine"
+                  ? "need-option selected"
+                  : "need-option"
               }
 
               onClick={() =>
-                setNeed("Other")
+                setNeed("General Medicine")
               }
-
             >
 
-              ➕
+              <span className="need-emoji">
+                ➕
+              </span>
 
               <span>
-                Other
+                {t.other}
               </span>
 
             </button>
-
 
           </div>
 
 
 
-          {/* ================================= */}
-          {/* VOICE BUTTON */}
-          {/* ================================= */}
+          {/* =================================
+              LOCATION
+          ================================= */}
 
-          <button className="voice-button">
+          <div className="location-section">
 
-            <Mic size={22} />
+            <div className="location-heading">
 
-            Tell us what you need
+              <MapPin size={19} />
 
-          </button>
+              <div>
 
+                <strong>
+                  {t.location}
+                </strong>
 
+                <span>
+                  RuralCare uses your location
+                  to estimate accessibility.
+                </span>
 
-          {/* ================================= */}
-          {/* LOCATION */}
-          {/* ================================= */}
-
-          <div className="location-box">
-
-            <MapPin size={22} />
-
-
-            <div>
-
-              <strong>
-                Your location
-              </strong>
-
-
-              <p>
-                {locationStatus}
-              </p>
+              </div>
 
             </div>
 
 
             <button
-
               className="location-button"
-
               onClick={detectLocation}
-
             >
 
-              Detect
+              <MapPin size={18} />
+
+              {locationStatus ||
+                t.detect}
 
             </button>
 
@@ -559,19 +784,18 @@ function App() {
 
 
 
-          {/* ================================= */}
-          {/* FIND CARE BUTTON */}
-          {/* ================================= */}
+          {/* =================================
+              START
+          ================================= */}
 
           <button
-
-            className="continue-button"
-
+            className="start-button"
             onClick={handleStart}
-
           >
 
-            Find My Best Care
+            <span>
+              {t.find}
+            </span>
 
             <ArrowRight size={20} />
 
@@ -582,85 +806,83 @@ function App() {
 
 
 
-        {/* ================================= */}
-        {/* HOW IT WORKS */}
-        {/* ================================= */}
+        {/* =====================================
+            HOW IT WORKS
+        ===================================== */}
 
-        <section className="how-section">
+        <section className="how-it-works">
 
           <h2>
-            How RuralCare works
+            {t.how}
           </h2>
 
 
           <div className="steps">
 
-
-            {/* FIND */}
-
             <div className="step">
 
+              <span>
+                1
+              </span>
+
               <div>
-                📍
+
+                <strong>
+                  Tell us what you need
+                </strong>
+
+                <p>
+                  Symptoms, check-up or another
+                  healthcare need.
+                </p>
+
               </div>
-
-              <h3>
-                Find
-              </h3>
-
-              <p>
-
-                We understand your healthcare need
-                and location.
-
-              </p>
 
             </div>
 
 
-
-            {/* MATCH */}
-
             <div className="step">
 
+              <span>
+                2
+              </span>
+
               <div>
-                ⚙️
+
+                <strong>
+                  We assess accessibility
+                </strong>
+
+                <p>
+                  Location, availability and
+                  connectivity are considered.
+                </p>
+
               </div>
-
-              <h3>
-                Match
-              </h3>
-
-              <p>
-
-                We compare available care options.
-
-              </p>
 
             </div>
 
 
-
-            {/* CONNECT */}
-
             <div className="step">
 
+              <span>
+                3
+              </span>
+
               <div>
-                ❤️
+
+                <strong>
+                  Get the best care option
+                </strong>
+
+                <p>
+                  Teleconsultation, nearby care
+                  or urgent help.
+                </p>
+
               </div>
 
-              <h3>
-                Connect
-              </h3>
-
-              <p>
-
-                We guide you to the most accessible care.
-
-              </p>
-
             </div>
-
 
           </div>
 
@@ -672,7 +894,6 @@ function App() {
     </div>
 
   );
-
 
 }
 
