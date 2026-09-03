@@ -36,11 +36,77 @@ function Results({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [careResult, setCareResult] = useState(null);
+const [aiGuidance, setAiGuidance] = useState(null);
+const [aiLoading, setAiLoading] = useState(false);
 
 
   // =====================================================
   // CALL RURALCARE CARE ENGINE
   // =====================================================
+// =====================================================
+// CALL RURALCARE AI
+// =====================================================
+
+useEffect(() => {
+
+  const getAIGuidance = async () => {
+
+    if (
+      need !== "Symptoms" ||
+      !symptomData?.symptoms?.length
+    ) {
+      return;
+    }
+
+    try {
+
+      setAiLoading(true);
+
+      const message =
+        `I am experiencing ${symptomData.symptoms.join(", ")}.`;
+
+      const response = await fetch(
+        "http://localhost:5000/api/ai/guidance",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json",
+          },
+
+          body: JSON.stringify({
+            message,
+            language,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("AI guidance unavailable");
+      }
+
+      const data = await response.json();
+
+      setAiGuidance(data);
+
+    } catch (error) {
+
+      console.error(
+        "AI guidance error:",
+        error
+      );
+
+    } finally {
+
+      setAiLoading(false);
+
+    }
+
+  };
+
+  getAIGuidance();
+
+}, [need, symptomData, language]);
 
   useEffect(() => {
 
@@ -898,7 +964,138 @@ function Results({
             </>
 
           )}
+{/* =====================================================
+    AI PATIENT GUIDANCE
+===================================================== */}
 
+{need === "Symptoms" && (
+  <section
+    className="recommendation-box"
+    style={{
+      marginBottom: "24px"
+    }}
+  >
+
+    <div className="recommendation-title">
+
+      <Brain size={18} />
+
+      <h3>
+        RuralCare AI Guidance
+      </h3>
+
+    </div>
+
+    {aiLoading ? (
+
+      <p>
+        Understanding your symptoms...
+      </p>
+
+    ) : aiGuidance ? (
+
+      <>
+
+        <p>
+          <strong>
+            {aiGuidance.summary}
+          </strong>
+        </p>
+
+        {aiGuidance.supportiveAdvice?.length > 0 && (
+
+          <div>
+
+            <strong>
+              What you can do now
+            </strong>
+
+            <ul>
+
+              {aiGuidance.supportiveAdvice.map(
+                (advice, index) => (
+                  <li key={index}>
+                    {advice}
+                  </li>
+                )
+              )}
+
+            </ul>
+
+          </div>
+
+        )}
+
+        {aiGuidance.medicationReminder && (
+
+          <p>
+
+            <strong>
+              Medicine reminder:
+            </strong>{" "}
+
+            {aiGuidance.medicationReminder}
+
+          </p>
+
+        )}
+
+        {aiGuidance.doctorAdvice && (
+
+          <p>
+
+            <strong>
+              When to consult a doctor:
+            </strong>{" "}
+
+            {aiGuidance.doctorAdvice}
+
+          </p>
+
+        )}
+
+        {aiGuidance.redFlags?.length > 0 && (
+
+          <div>
+
+            <strong>
+              Seek urgent help if:
+            </strong>
+
+            <ul>
+
+              {aiGuidance.redFlags.map(
+                (flag, index) => (
+                  <li key={index}>
+                    {flag}
+                  </li>
+                )
+              )}
+
+            </ul>
+
+          </div>
+
+        )}
+
+        <small>
+          AI provides supportive guidance only.
+          It does not diagnose or prescribe medicines.
+        </small>
+
+      </>
+
+    ) : (
+
+      <p>
+        AI guidance is currently unavailable.
+        You can still use the RuralCare care recommendation.
+      </p>
+
+    )}
+
+  </section>
+)}
 
 
           {/* WHY */}

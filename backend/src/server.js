@@ -17,6 +17,9 @@ const providerRoutes =
 const facilityRoutes =
   require("./routes/facilityRoutes");
 
+const aiRoutes =
+  require("./routes/aiRoutes");
+
 const app = express();
 
 app.use(cors());
@@ -30,6 +33,7 @@ app.use(express.json());
 app.use("/api/demand", demandRoutes);
 app.use("/api/providers", providerRoutes);
 app.use("/api/facilities", facilityRoutes);
+app.use("/api/ai", aiRoutes);
 
 
 // ===============================
@@ -55,7 +59,10 @@ app.post("/api/care/recommend", (req, res) => {
     console.log("CARE REQUEST RECEIVED");
     console.log("==============================");
 
-    console.log("Need:", req.body.need);
+    console.log(
+      "Need:",
+      req.body.need
+    );
 
     console.log(
       "Location:",
@@ -76,7 +83,8 @@ app.post("/api/care/recommend", (req, res) => {
 
 
     // Run care access engine
-    const result = findBestCare(req.body);
+    const result =
+      findBestCare(req.body);
 
 
     console.log("------------------------------");
@@ -124,13 +132,17 @@ app.post("/api/care/recommend", (req, res) => {
 
       recordUnmetDemand({
 
-        need: req.body.need,
+        need:
+          req.body.need,
 
-        village: req.body.village,
+        village:
+          req.body.village,
 
-        latitude: req.body.latitude,
+        latitude:
+          req.body.latitude,
 
-        longitude: req.body.longitude,
+        longitude:
+          req.body.longitude,
 
         connectivity:
           req.body.connectivity,
